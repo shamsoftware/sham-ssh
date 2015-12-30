@@ -7,6 +7,7 @@
     </Appenders>
 
     <Loggers>
+        <Logger name="org.apache.sshd.server.channel" level="TRACE" />
         <Root level="DEBUG">
             <AppenderRef ref="Console"/>
         </Root>

@@ -1,47 +1,41 @@
-package software.sham.sftp;
+package software.sham.ssh;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.sshd.common.NamedFactory;
-import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
+import org.apache.sshd.common.Factory;
 import org.apache.sshd.common.keyprovider.AbstractClassLoadableResourceKeyPairProvider;
 import org.apache.sshd.common.util.SecurityUtils;
 import org.apache.sshd.server.Command;
+import org.apache.sshd.server.CommandFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.auth.password.PasswordAuthenticator;
-import org.apache.sshd.server.command.ScpCommandFactory;
 import org.apache.sshd.server.session.ServerSession;
-import org.apache.sshd.server.subsystem.sftp.SftpSubsystemFactory;
+import org.hamcrest.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 
-public class MockSftpServer {
+public class MockSshServer implements Factory<Command>, CommandFactory {
     public static final String USERNAME = "tester";
     public static final String PASSWORD = "testing";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final SshServer sshServer;
+    private final MockSshCommand sshCommand;
 
-    private Path baseDirectory;
-
-    public MockSftpServer(int port) throws IOException {
-        sshServer = initSftpServer(port);
+    public MockSshServer(int port) throws IOException {
+        sshServer = initSshServer(port);
+        sshCommand = new MockSshCommand();
         start();
     }
 
-    public Path getBaseDirectory() {
-        return baseDirectory;
+    public SshResponderBuilder respondTo(Matcher matcher) {
+        SshResponderBuilder builder = new SshResponderBuilder();
+        sshCommand.getDispatcher().add(matcher, builder.getResponder());
+        return builder;
     }
 
     protected void start() throws IOException {
-        baseDirectory = Files.createTempDirectory("sftproot");
-
-        sshServer.setFileSystemFactory(new VirtualFileSystemFactory(baseDirectory.toAbsolutePath().toString()));
-
         AbstractClassLoadableResourceKeyPairProvider keyPairProvider = SecurityUtils.createClassLoadableResourceKeyPairProvider();
         keyPairProvider.setResources(Arrays.asList("keys/sham-ssh-id-dsa"));
         sshServer.setKeyPairProvider(keyPairProvider);
@@ -51,14 +45,11 @@ public class MockSftpServer {
 
     public void stop() throws IOException {
         sshServer.stop();
-        FileUtils.deleteQuietly(baseDirectory.toFile());
     }
 
-    private SshServer initSftpServer(int port) {
+    protected SshServer initSshServer(int port) {
         final SshServer sshd = SshServer.setUpDefaultServer();
         sshd.setPort(port);
-        sshd.setCommandFactory(new ScpCommandFactory());
-        sshd.setSubsystemFactories(Arrays.<NamedFactory<Command>>asList(new SftpSubsystemFactory()));
         sshd.setPasswordAuthenticator(new PasswordAuthenticator() {
             @Override
             public boolean authenticate(String username, String password, ServerSession session) {
@@ -66,6 +57,19 @@ public class MockSftpServer {
             }
 
         });
+        sshd.setShellFactory(this);
+        sshd.setCommandFactory(this);
         return sshd;
+    }
+
+    @Override
+    public Command create() {
+        logger.info("Creating mock SSH shell");
+        return sshCommand;
+    }
+
+    @Override
+    public Command createCommand(String command) {
+        return create();
     }
 }

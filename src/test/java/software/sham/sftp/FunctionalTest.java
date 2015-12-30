@@ -14,10 +14,22 @@ import java.util.Properties;
 
 public class FunctionalTest {
     MockSftpServer server;
+    Session sshSession;
 
     @Before
     public void initSftp() throws IOException {
         server = new MockSftpServer(9022);
+    }
+
+    @Before
+    public void initSshClient() throws JSchException {
+        JSch jsch = new JSch();
+        sshSession = jsch.getSession("tester", "localhost", 9022);
+        Properties config = new Properties();
+        config.setProperty("StrictHostKeyChecking", "no");
+        sshSession.setConfig(config);
+        sshSession.setPassword("testing");
+        sshSession.connect();
     }
 
     @After
@@ -29,15 +41,7 @@ public class FunctionalTest {
     public void connectAndDownloadFile() throws JSchException, IOException, SftpException {
         Files.copy(IOUtils.toInputStream("example file contents"), server.getBaseDirectory().resolve("example.txt"));
 
-        JSch jsch = new JSch();
-        Session session = jsch.getSession("tester", "localhost", 9022);
-        Properties config = new Properties();
-        config.setProperty("StrictHostKeyChecking", "no");
-        session.setConfig(config);
-        session.setPassword("testing");
-        session.connect();
-
-        ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+        ChannelSftp channel = (ChannelSftp) sshSession.openChannel("sftp");
         channel.connect();
 
         final String downloadedContents = IOUtils.toString(channel.get("example.txt"));
