@@ -18,24 +18,37 @@ import java.util.Arrays;
 public class MockSshServer implements Factory<Command>, CommandFactory {
     public static final String USERNAME = "tester";
     public static final String PASSWORD = "testing";
+    protected final SshServer sshServer;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final SshServer sshServer;
-    private final MockSshCommand sshCommand;
+    private MockSshShell sshShell;
 
     public MockSshServer(int port) throws IOException {
+        this(port, true);
+    }
+
+    protected MockSshServer(int port, boolean shouldStartServices) throws IOException {
         sshServer = initSshServer(port);
-        sshCommand = new MockSshCommand();
-        start();
+        if (shouldStartServices) {
+            enableShell();
+            start();
+        }
     }
 
     public SshResponderBuilder respondTo(Matcher matcher) {
         SshResponderBuilder builder = new SshResponderBuilder();
-        sshCommand.getDispatcher().add(matcher, builder.getResponder());
+        sshShell.getDispatcher().add(matcher, builder.getResponder());
         return builder;
     }
 
-    protected void start() throws IOException {
+    public MockSshServer enableShell() {
+        logger.info("Mock SSH shell is enabled");
+        sshShell = new MockSshShell();
+        sshServer.setShellFactory(this);
+        return this;
+    }
+
+    public void start() throws IOException {
         AbstractClassLoadableResourceKeyPairProvider keyPairProvider = SecurityUtils.createClassLoadableResourceKeyPairProvider();
         keyPairProvider.setResources(Arrays.asList("keys/sham-ssh-id-dsa"));
         sshServer.setKeyPairProvider(keyPairProvider);
@@ -57,15 +70,13 @@ public class MockSshServer implements Factory<Command>, CommandFactory {
             }
 
         });
-        sshd.setShellFactory(this);
-        sshd.setCommandFactory(this);
         return sshd;
     }
 
     @Override
     public Command create() {
-        logger.info("Creating mock SSH shell");
-        return sshCommand;
+        logger.debug("Creating mock SSH shell");
+        return sshShell;
     }
 
     @Override

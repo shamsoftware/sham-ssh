@@ -4,10 +4,15 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%-5p %d [%t] %c: %m%n"/>
         </Console>
+        <Console name="ConsoleError" target="SYSTEM_ERR">
+            <PatternLayout pattern="%-5p %d [%t] %c: %m%n"/>
+        </Console>
     </Appenders>
 
     <Loggers>
-        <Logger name="org.apache.sshd.server.channel" level="TRACE" />
+        <Logger name="org.apache.sshd" level="DEBUG" additivity="false">
+            <AppenderRef ref="ConsoleError" />
+        </Logger>
         <Root level="DEBUG">
             <AppenderRef ref="Console"/>
         </Root>

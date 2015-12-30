@@ -8,15 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MockSshCommand implements Command {
+public class MockSshShell implements Command {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private InputStream in;
     private OutputStream out;
@@ -48,7 +46,7 @@ public class MockSshCommand implements Command {
 
     @Override
     public void start(Environment env) throws IOException {
-        logger.debug("Starting mock SSH command");
+        logger.debug("Starting mock SSH shell");
         executor.submit(eventLoop);
     }
 
@@ -85,14 +83,14 @@ public class MockSshCommand implements Command {
 
     public class MockCommandEventLoop implements Runnable {
         private boolean stopped = false;
-        private final MockSshCommand command;
-        public MockCommandEventLoop(MockSshCommand command) {
+        private final MockSshShell command;
+        public MockCommandEventLoop(MockSshShell command) {
             this.command = command;
         }
 
         public void stop() {
             this.stopped = true;
-            logger.info("Stopped Mock SSH command event loop");
+            logger.info("Stopped Mock SSH shell event loop");
         }
 
         @Override
