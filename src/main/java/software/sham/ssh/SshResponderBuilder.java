@@ -1,14 +1,22 @@
 package software.sham.ssh;
 
+import software.sham.ssh.actions.Delay;
+import software.sham.ssh.actions.Output;
+
 public class SshResponderBuilder {
     private final SshResponder responder = new SshResponder();
 
-    public SshResponderBuilder withText(String response) {
-        responder.setResponse(response);
+    public SshResponder getResponder() {
+        return this.responder;
+    }
+
+    public SshResponderBuilder withOutput(String output) {
+        responder.add(new Output(output));
         return this;
     }
 
-    public SshResponder getResponder() {
-        return this.responder;
+    public SshResponderBuilder withDelay(long milliseconds) {
+        responder.add(new Delay(milliseconds));
+        return this;
     }
 }

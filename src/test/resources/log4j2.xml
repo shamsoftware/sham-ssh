@@ -10,7 +10,7 @@
     </Appenders>
 
     <Loggers>
-        <Logger name="org.apache.sshd" level="DEBUG" additivity="false">
+        <Logger name="org.apache.sshd" level="INFO" additivity="false">
             <AppenderRef ref="ConsoleError" />
         </Logger>
         <Root level="DEBUG">

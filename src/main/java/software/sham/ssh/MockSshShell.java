@@ -22,7 +22,7 @@ public class MockSshShell implements Command {
     private ExitCallback callback;
     private final ResponderDispatcher dispatcher = new ResponderDispatcher();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private MockCommandEventLoop eventLoop = new MockCommandEventLoop(this);
+    private MockShellEventLoop eventLoop = new MockShellEventLoop(this);
 
     @Override
     public void setInputStream(InputStream in) {
@@ -69,23 +69,15 @@ public class MockSshShell implements Command {
         writer.close();
     }
 
-    protected void writeOutput(String output) throws IOException {
-        logger.trace("Writing output " + output + " to stream " + out.toString());
-        Writer writer = new BufferedWriter(Channels.newWriter(Channels.newChannel(out), StandardCharsets.UTF_8.name()));
-        writer.write(output);
-        writer.flush();
-        writer.close();
-    }
-
     public ResponderDispatcher getDispatcher() {
         return this.dispatcher;
     }
 
-    public class MockCommandEventLoop implements Runnable {
+    public class MockShellEventLoop implements Runnable {
         private boolean stopped = false;
-        private final MockSshShell command;
-        public MockCommandEventLoop(MockSshShell command) {
-            this.command = command;
+        private final MockSshShell shell;
+        public MockShellEventLoop(MockSshShell shell) {
+            this.shell = shell;
         }
 
         public void stop() {
@@ -96,17 +88,17 @@ public class MockSshShell implements Command {
         @Override
         public void run() {
             while(! stopped) {
+                logger.trace("Polling input...");
                 try {
-                    logger.trace("Polling input...");
-                    List<String> input = command.readInput();
+                    List<String> input = shell.readInput();
                     for (String line : input) {
                         logger.debug("Found input " + line.toString());
-                        command.writeOutput(dispatcher.find(line).respond());
+                        dispatcher.find(line).respond(out);
                     }
-                    Thread.sleep(250);
+                    Thread.sleep(100);
                 } catch (IOException e) {
                     try {
-                        command.writeError(e);
+                        shell.writeError(e);
                     } catch (IOException e2) {
                         System.err.println(e2.toString());
                     }
