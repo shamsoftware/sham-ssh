@@ -8,11 +8,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.channels.Channels;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MockSshShell implements Command {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -23,6 +29,7 @@ public class MockSshShell implements Command {
     private final ResponderDispatcher dispatcher = new ResponderDispatcher();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private MockShellEventLoop eventLoop = new MockShellEventLoop(this);
+    private Future<Void> eventLoopFuture;
 
     @Override
     public void setInputStream(InputStream in) {
@@ -47,7 +54,7 @@ public class MockSshShell implements Command {
     @Override
     public void start(Environment env) throws IOException {
         logger.debug("Starting mock SSH shell");
-        executor.submit(eventLoop);
+        eventLoopFuture = (Future<Void>) executor.submit(eventLoop);
     }
 
     @Override
@@ -58,8 +65,19 @@ public class MockSshShell implements Command {
     }
 
     protected List<String> readInput() throws IOException {
-        BufferedReader reader = new BufferedReader(Channels.newReader(Channels.newChannel(in), StandardCharsets.UTF_8.name()));
-        return IOUtils.readLines(reader);
+        StringBuffer sb = new StringBuffer();
+        final Charset charset = StandardCharsets.UTF_8;
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        int len = in.available();
+        while (len > 0) {
+            if (len > 1024) len = 1024;
+            int lenRead = in.read(buffer.array(), 0, len);
+            CharBuffer cb = charset.decode(buffer);
+            sb.append(cb, 0, lenRead);
+            logger.trace("Read {} characters from {} bytes", cb.length(), lenRead);
+            len = in.available();
+        }
+        return Arrays.asList(sb.toString().split("\\r?\\n"));
     }
 
     protected void writeError(Exception e) throws IOException {
@@ -91,8 +109,9 @@ public class MockSshShell implements Command {
                 logger.trace("Polling input...");
                 try {
                     List<String> input = shell.readInput();
+                    logger.trace("Returned from reading input");
                     for (String line : input) {
-                        logger.debug("Found input " + line.toString());
+                        logger.debug("SSH server received input [{}]", line.toString());
                         dispatcher.find(line).respond(out);
                     }
                     Thread.sleep(100);

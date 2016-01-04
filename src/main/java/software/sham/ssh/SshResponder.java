@@ -21,8 +21,9 @@ public class SshResponder {
             try {
                 String output = action.respond();
                 out.write(output.getBytes());
-                logger.debug("Wrote output {}", output);
+                logger.trace("Wrote output {}", output);
                 out.flush();
+
             } catch (IOException e) {
                 logger.warn("Mock SSH error during response {}: {}", action.toString(), e.getMessage());
             }

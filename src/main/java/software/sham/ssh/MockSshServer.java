@@ -9,6 +9,7 @@ import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.auth.password.PasswordAuthenticator;
 import org.apache.sshd.server.session.ServerSession;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,10 @@ public class MockSshServer implements Factory<Command>, CommandFactory {
         SshResponderBuilder builder = new SshResponderBuilder();
         sshShell.getDispatcher().add(matcher, builder.getResponder());
         return builder;
+    }
+
+    public SshResponderBuilder respondTo(String input) {
+        return respondTo(Matchers.equalTo(input));
     }
 
     public MockSshServer enableShell() {

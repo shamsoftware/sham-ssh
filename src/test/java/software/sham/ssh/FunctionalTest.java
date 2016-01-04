@@ -14,18 +14,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 public class FunctionalTest {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     MockSshServer server;
     Session sshSession;
     ChannelShell sshChannel;
-    WritableByteChannel inputChannel;
-    ByteArrayOutputStream outputBuffer;
+    ByteArrayOutputStream sshClientOutput;
+    PrintWriter inputWriter;
 
     @Before
     public void initSsh() throws IOException {
@@ -44,9 +46,10 @@ public class FunctionalTest {
         sshChannel = (ChannelShell) sshSession.openChannel("shell");
         PipedInputStream channelIn = new PipedInputStream();
         sshChannel.setInputStream(channelIn);
-        inputChannel = Channels.newChannel(new PipedOutputStream(channelIn));
-        outputBuffer = new ByteArrayOutputStream();
-        sshChannel.setOutputStream(outputBuffer);
+        OutputStream sshClientInput = new PipedOutputStream(channelIn);
+        inputWriter = new PrintWriter(sshClientInput);
+        sshClientOutput = new ByteArrayOutputStream();
+        sshChannel.setOutputStream(sshClientOutput);
         sshChannel.connect(1000);
     }
 
@@ -59,8 +62,7 @@ public class FunctionalTest {
     @Test
     public void defaultShellCommandsShouldSilentlySucceed() throws Exception {
         sendTextToServer("Knock knock\n");
-        Thread.sleep(200);
-        assertThat(outputBuffer.size(), equalTo(0));
+        assertThat(sshClientOutput.size(), equalTo(0));
     }
 
     @Test
@@ -69,8 +71,7 @@ public class FunctionalTest {
             .withOutput("hodor\n");
 
         sendTextToServer("Knock knock\n");
-        Thread.sleep(200);
-        assertEquals("hodor\n", outputBuffer.toString());
+        assertEquals("hodor\n", sshClientOutput.toString());
     }
 
     @Test
@@ -80,8 +81,7 @@ public class FunctionalTest {
                 .withOutput("Completed.\n");
 
         sendTextToServer("start");
-        Thread.sleep(200);
-        assertEquals("Starting...\nCompleted.\n", outputBuffer.toString());
+        assertEquals("Starting...\nCompleted.\n", sshClientOutput.toString());
     }
 
     @Test
@@ -92,18 +92,31 @@ public class FunctionalTest {
                 .withOutput("Completed.\n");
 
         sendTextToServer("start");
-        Thread.sleep(50);
         logger.debug("Checking for first line");
-        assertEquals("Starting...\n", outputBuffer.toString());
-        Thread.sleep(550);
+        assertEquals("Starting...\n", sshClientOutput.toString());
+        Thread.sleep(500);
         logger.debug("Checking for second line");
-        assertEquals("Starting...\nCompleted.\n", outputBuffer.toString());
+        assertEquals("Starting...\nCompleted.\n", sshClientOutput.toString());
     }
 
-    private void sendTextToServer(String text) throws IOException {
-        try (Writer writer = Channels.newWriter(inputChannel, StandardCharsets.UTF_8.name())) {
-            writer.write(text);
-        }
-        logger.debug("Sent input to SSH server: {}", text);
+    @Test
+    public void differentOutputForDifferentInput() throws Exception {
+        server.respondTo(any(String.class))
+                .withOutput("default\n");
+        server.respondTo("Knock knock")
+                .withOutput("Who's there?\n");
+
+        sendTextToServer("Something wicked this way comes");
+        String output = sshClientOutput.toString();
+        assertEquals("default\n", output);
+        sendTextToServer("Knock knock");
+        assertEquals("default\nWho's there?\n", sshClientOutput.toString());
+    }
+
+    private void sendTextToServer(final String text) throws Exception {
+        inputWriter.write(text);
+        inputWriter.flush();
+        logger.debug("Sent text to SSH server: {}", text);
+        Thread.sleep(100);
     }
 }
