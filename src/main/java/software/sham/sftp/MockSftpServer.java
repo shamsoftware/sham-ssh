@@ -26,8 +26,15 @@ public class MockSftpServer extends MockSshServer {
     private Path baseDirectory;
 
     public MockSftpServer(int port) throws IOException {
+        this(port, false);
+    }
+
+    private MockSftpServer(int port, boolean enableShell) throws IOException {
         super(port, false);
         initSftp();
+        if (enableShell) {
+            enableShell();
+        }
         start();
     }
 
@@ -53,4 +60,7 @@ public class MockSftpServer extends MockSshServer {
         FileUtils.deleteQuietly(baseDirectory.toFile());
     }
 
+    public static MockSftpServer createWithShell(int port) throws IOException {
+        return new MockSftpServer(port, true);
+    }
 }
