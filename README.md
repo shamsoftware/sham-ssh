@@ -20,7 +20,7 @@ the API until it reaches 1.0 status. Of course, we'll try to keep breaking chang
 <dependency>
   <groupId>software.sham</groupId>
   <artifactId>sham-sftp</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
 </dependency>
 ```
 
@@ -30,7 +30,7 @@ The artifacts are available in the [Maven Central Repository](http://search.mave
 
 If you need to add this to your project manually, you can download it directly from the maven central repository:
 
-[Download Jar](http://search.maven.org/remotecontent?filepath=software/sham/sham-sftp/0.0.1/sham-sftp-0.0.1.jar)
+[Download Jar](http://search.maven.org/remotecontent?filepath=software/sham/sham-sftp/0.0.2/sham-sftp-0.0.2.jar)
 
 # License
 
