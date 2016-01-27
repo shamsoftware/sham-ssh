@@ -3,7 +3,7 @@
 
     <groupId>software.sham</groupId>
     <artifactId>sham-sftp</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.3</version>
     <packaging>jar</packaging>
     <name>Mock SFTP Testing API</name>
     <url>http://sham.software/sftp</url>
