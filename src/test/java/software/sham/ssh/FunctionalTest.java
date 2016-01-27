@@ -66,6 +66,13 @@ public class FunctionalTest {
     }
 
     @Test
+    public void defaultShellShouldDisconnectOnExit() throws Exception {
+        sendTextToServer("exit\n");
+        Thread.sleep(300);
+        assertThat(sshChannel.isConnected(), is(false));
+    }
+
+    @Test
     public void singleOutput() throws Exception {
         server.respondTo(any(String.class))
             .withOutput("hodor\n");

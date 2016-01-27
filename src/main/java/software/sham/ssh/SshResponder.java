@@ -16,14 +16,10 @@ public class SshResponder {
 
     private final List<Action> actions = new LinkedList<>();
 
-    public void respond(OutputStream out) {
+    public void respond(MockSshShell shell) {
         for (Action action : actions) {
             try {
-                String output = action.respond();
-                out.write(output.getBytes());
-                logger.trace("Wrote output {}", output);
-                out.flush();
-
+                action.respond(shell);
             } catch (IOException e) {
                 logger.warn("Mock SSH error during response {}: {}", action.toString(), e.getMessage());
             }

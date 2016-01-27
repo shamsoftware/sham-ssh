@@ -59,9 +59,12 @@ public class MockSshShell implements Command {
 
     @Override
     public void destroy() {
-        eventLoop.stop();
-        callback.onExit(0);
+        closeSession();
         executor.shutdown();
+    }
+
+    public void closeSession() {
+        eventLoop.stop();
     }
 
     protected List<String> readInput() throws IOException {
@@ -87,6 +90,16 @@ public class MockSshShell implements Command {
         writer.close();
     }
 
+    public void sendResponse(String output) {
+        try {
+            out.write(output.getBytes());
+            logger.trace("Wrote output {}", output);
+            out.flush();
+        } catch (IOException e) {
+            logger.error("Error sending response to client", e);
+        }
+    }
+
     public ResponderDispatcher getDispatcher() {
         return this.dispatcher;
     }
@@ -99,8 +112,10 @@ public class MockSshShell implements Command {
         }
 
         public void stop() {
-            this.stopped = true;
-            logger.info("Stopped Mock SSH shell event loop");
+            if (!this.stopped) {
+                this.stopped = true;
+                logger.info("Stopped Mock SSH shell event loop");
+            }
         }
 
         @Override
@@ -112,7 +127,7 @@ public class MockSshShell implements Command {
                     logger.trace("Returned from reading input");
                     for (String line : input) {
                         logger.debug("SSH server received input [{}]", line.toString());
-                        dispatcher.find(line).respond(out);
+                        dispatcher.find(line).respond(shell);
                     }
                     Thread.sleep(100);
                 } catch (IOException e) {
@@ -125,6 +140,7 @@ public class MockSshShell implements Command {
                     logger.debug("Interrupted event loop thread: " + e.getMessage());
                 }
             }
+            logger.debug("Event loop completed");
             callback.onExit(0);
         }
     }

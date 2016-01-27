@@ -1,5 +1,9 @@
 package software.sham.ssh.actions;
 
+import software.sham.ssh.MockSshShell;
+
+import java.io.IOException;
+
 public interface Action {
-    String respond();
+    void respond(MockSshShell shell) throws IOException;
 }

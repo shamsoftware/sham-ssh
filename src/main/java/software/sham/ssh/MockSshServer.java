@@ -49,6 +49,7 @@ public class MockSshServer implements Factory<Command>, CommandFactory {
     public MockSshServer enableShell() {
         logger.info("Mock SSH shell is enabled");
         sshShell = new MockSshShell();
+        setDefaults();
         sshServer.setShellFactory(this);
         return this;
     }
@@ -76,6 +77,10 @@ public class MockSshServer implements Factory<Command>, CommandFactory {
 
         });
         return sshd;
+    }
+
+    private void setDefaults() {
+        respondTo("exit").withClose();
     }
 
     @Override

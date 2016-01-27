@@ -2,6 +2,7 @@ package software.sham.ssh.actions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.sham.ssh.MockSshShell;
 
 public class Output implements Action {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -11,9 +12,9 @@ public class Output implements Action {
     }
 
     @Override
-    public String respond() {
+    public void respond(MockSshShell shell) {
         logger.debug("Sending output: " + output);
-        return output;
+        shell.sendResponse(output);
     }
 
     @Override
