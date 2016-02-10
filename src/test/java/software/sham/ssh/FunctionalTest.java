@@ -99,13 +99,7 @@ public class FunctionalTest {
 
     @Test
     public void shouldSupportPublicKeyAuth() throws Exception {
-        sshSession.disconnect();
-
-        server.stop();
-        server = new MockSshServer(9022, false)
-            .enableShell()
-            .allowPublicKey(IOUtils.toByteArray(Thread.currentThread().getContextClassLoader().getResourceAsStream("keys/id_rsa_tester.der.pub")));
-        server.start();
+        server.allowPublicKey(IOUtils.toByteArray(Thread.currentThread().getContextClassLoader().getResourceAsStream("keys/id_rsa_tester.der.pub")));
 
         initSshClientWithKey();
 

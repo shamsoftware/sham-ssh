@@ -53,6 +53,7 @@ public class MockSshServer implements Factory<Command>, CommandFactory {
     public MockSshServer allowPublicKey(byte[] key) throws GeneralSecurityException {
         final KeySpec spec = new X509EncodedKeySpec(key);
         keys.add(KeyFactory.getInstance("RSA").generatePublic(spec));
+        sshServer.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this.keys));
         return this;
     }
 
