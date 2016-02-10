@@ -9,6 +9,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,9 +55,10 @@ public class FunctionalTest {
     }
 
     @After
-    public void stopSsh() throws IOException {
+    public void stopSsh() throws Exception {
         sshSession.disconnect();
         server.stop();
+        Thread.sleep(200);
     }
 
     @Test
