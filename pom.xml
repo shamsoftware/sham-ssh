@@ -2,16 +2,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>software.sham</groupId>
-    <artifactId>sham-sftp</artifactId>
-    <version>0.0.4-SNAPSHOT</version>
+    <artifactId>sham-ssh</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>Mock SFTP Testing API</name>
-    <url>http://sham.software/sftp</url>
-    <description>Testing library for mocking interactions to SFTP servers</description>
+    <name>Mock SSH and SFTP Testing API</name>
+    <url>http://sham.software/ssh</url>
+    <description>Testing library for mocking interactions to SSH and SFTP servers</description>
     <scm>
-        <url>scm:git:git@github.com:shamsoftware/sham-sftp.git</url>
-        <connection>scm:git:git@github.com:shamsoftware/sham-sftp.git</connection>
-        <developerConnection>scm:git:git@github.com:shamsoftware/sham-sftp.git</developerConnection>
+        <url>scm:git:git@github.com:shamsoftware/sham-ssh.git</url>
+        <connection>scm:git:git@github.com:shamsoftware/sham-ssh.git</connection>
+        <developerConnection>scm:git:git@github.com:shamsoftware/sham-ssh.git</developerConnection>
     </scm>
     <licenses>
         <license>

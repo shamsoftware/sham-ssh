@@ -1,8 +1,8 @@
 
 
-# sham.software Mock SFTP API
+# sham.software Mock SSH API
 
-Mock SFTP testing library for running an SFTP server in process, using a local temporary directory
+Mock SSH and SFTP testing library for running an SSH server in process. SFTP uses a local temporary directory
 
 This library is still under development. Feel free to use, contribute but there could be changes to
 the API until it reaches 1.0 status. Of course, we'll try to keep breaking changes to a minimum.
@@ -19,18 +19,18 @@ the API until it reaches 1.0 status. Of course, we'll try to keep breaking chang
 ```xml
 <dependency>
   <groupId>software.sham</groupId>
-  <artifactId>sham-sftp</artifactId>
-  <version>0.0.3</version>
+  <artifactId>sham-ssh</artifactId>
+  <version>0.1.0</version>
 </dependency>
 ```
 
-The artifacts are available in the [Maven Central Repository](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22sham-sftp%22).
+The artifacts are available in the [Maven Central Repository](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22sham-ssh%22).
 
 ### Manual
 
 If you need to add this to your project manually, you can download it directly from the maven central repository:
 
-[Download Jar](http://search.maven.org/remotecontent?filepath=software/sham/sham-sftp/0.0.2/sham-sftp-0.0.2.jar)
+[Download Jar](http://search.maven.org/remotecontent?filepath=software/sham/sham-ssh/0.1.0/sham-ssh-0.1.0.jar)
 
 # License
 
