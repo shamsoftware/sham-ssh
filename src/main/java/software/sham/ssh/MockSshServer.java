@@ -7,6 +7,7 @@ import org.apache.sshd.server.Command;
 import org.apache.sshd.server.CommandFactory;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.auth.password.PasswordAuthenticator;
+import org.apache.sshd.server.auth.pubkey.KeySetPublickeyAuthenticator;
 import org.apache.sshd.server.session.ServerSession;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -14,12 +15,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MockSshServer implements Factory<Command>, CommandFactory {
     public static final String USERNAME = "tester";
     public static final String PASSWORD = "testing";
     protected final SshServer sshServer;
+    private Set<PublicKey> keys = new HashSet<PublicKey>();
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private MockSshShell sshShell;
@@ -34,6 +45,15 @@ public class MockSshServer implements Factory<Command>, CommandFactory {
             enableShell();
             start();
         }
+    }
+
+    /**
+     * @param key Key in DER format
+     */
+    public MockSshServer allowPublicKey(byte[] key) throws GeneralSecurityException {
+        final KeySpec spec = new X509EncodedKeySpec(key);
+        keys.add(KeyFactory.getInstance("RSA").generatePublic(spec));
+        return this;
     }
 
     public SshResponderBuilder respondTo(Matcher matcher) {
@@ -76,6 +96,7 @@ public class MockSshServer implements Factory<Command>, CommandFactory {
             }
 
         });
+        sshd.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this.keys));
         return sshd;
     }
 

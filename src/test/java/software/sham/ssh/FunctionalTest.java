@@ -7,20 +7,15 @@ import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.Properties;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 
 public class FunctionalTest {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -36,13 +31,32 @@ public class FunctionalTest {
     }
 
     @Before
-    public void initSshClient() throws JSchException, IOException {
+    public void initSshClientWithPassword() throws JSchException, IOException {
+        initSshClient();
+
+        sshSession.setPassword("testing");
+
+        connectWithStreams();
+    }
+
+    private void initSshClientWithKey() throws JSchException, IOException {
+        JSch jsch = initSshClient();
+
+        jsch.addIdentity("src/test/resources/keys/id_rsa_tester", "testing");
+
+        connectWithStreams();
+    }
+
+    private JSch initSshClient() throws JSchException {
         JSch jsch = new JSch();
         sshSession = jsch.getSession("tester", "localhost", 9022);
         Properties config = new Properties();
         config.setProperty("StrictHostKeyChecking", "no");
         sshSession.setConfig(config);
-        sshSession.setPassword("testing");
+        return jsch;
+    }
+
+    private void connectWithStreams() throws JSchException, IOException {
         sshSession.connect();
         sshChannel = (ChannelShell) sshSession.openChannel("shell");
         PipedInputStream channelIn = new PipedInputStream();
@@ -77,7 +91,26 @@ public class FunctionalTest {
     @Test
     public void singleOutput() throws Exception {
         server.respondTo(any(String.class))
-            .withOutput("hodor\n");
+                .withOutput("hodor\n");
+
+        sendTextToServer("Knock knock\n");
+        assertEquals("hodor\n", sshClientOutput.toString());
+    }
+
+    @Test
+    public void shouldSupportPublicKeyAuth() throws Exception {
+        sshSession.disconnect();
+
+        server.stop();
+        server = new MockSshServer(9022, false)
+            .enableShell()
+            .allowPublicKey(IOUtils.toByteArray(Thread.currentThread().getContextClassLoader().getResourceAsStream("keys/id_rsa_tester.der.pub")));
+        server.start();
+
+        initSshClientWithKey();
+
+        server.respondTo(any(String.class))
+                .withOutput("hodor\n");
 
         sendTextToServer("Knock knock\n");
         assertEquals("hodor\n", sshClientOutput.toString());
