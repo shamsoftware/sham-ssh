@@ -98,13 +98,25 @@ public class FunctionalTest {
     }
 
     @Test
-    public void shouldSupportPublicKeyAuth() throws Exception {
-        server.allowPublicKey(IOUtils.toByteArray(Thread.currentThread().getContextClassLoader().getResourceAsStream("keys/id_rsa_tester.der.pub")));
+    public void shouldSupportDerPublicKeyAuth() throws Exception {
+        server.allowDerPublicKey(IOUtils.toByteArray(Thread.currentThread().getContextClassLoader().getResourceAsStream("keys/id_rsa_tester.der.pub")));
 
         initSshClientWithKey();
 
         server.respondTo(any(String.class))
                 .withOutput("hodor\n");
+
+        sendTextToServer("Knock knock\n");
+        assertEquals("hodor\n", sshClientOutput.toString());
+    }
+
+    @Test
+    public void shouldSupportOpensshPublicKeyAuth() throws Exception {
+        server.allowOpensshPublicKey(IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream("keys/id_rsa_tester.pub")));
+        initSshClientWithKey();
+
+        server.respondTo(any(String.class))
+            .withOutput("hodor\n");
 
         sendTextToServer("Knock knock\n");
         assertEquals("hodor\n", sshClientOutput.toString());

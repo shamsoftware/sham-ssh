@@ -1,5 +1,6 @@
 package software.sham.ssh;
 
+import com.github.fommil.ssh.SshRsaCrypto;
 import org.apache.sshd.common.Factory;
 import org.apache.sshd.common.keyprovider.AbstractClassLoadableResourceKeyPairProvider;
 import org.apache.sshd.common.util.SecurityUtils;
@@ -50,9 +51,16 @@ public class MockSshServer implements Factory<Command>, CommandFactory {
     /**
      * @param key Key in DER format
      */
-    public MockSshServer allowPublicKey(byte[] key) throws GeneralSecurityException {
+    public MockSshServer allowDerPublicKey(byte[] key) throws GeneralSecurityException {
         final KeySpec spec = new X509EncodedKeySpec(key);
         keys.add(KeyFactory.getInstance("RSA").generatePublic(spec));
+        sshServer.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this.keys));
+        return this;
+    }
+
+    public MockSshServer allowOpensshPublicKey(String key) throws IOException, GeneralSecurityException {
+        final SshRsaCrypto rsa = new SshRsaCrypto();
+        keys.add(rsa.readPublicKey(rsa.slurpPublicKey(key)));
         sshServer.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this.keys));
         return this;
     }

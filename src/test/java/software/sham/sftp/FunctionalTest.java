@@ -9,7 +9,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
 
 public class FunctionalTest {
@@ -46,5 +49,16 @@ public class FunctionalTest {
 
         final String downloadedContents = IOUtils.toString(channel.get("example.txt"));
         assertEquals("example file contents", downloadedContents);
+    }
+
+    @Test
+    public void connectAndUploadFile() throws JSchException, SftpException, IOException {
+        ChannelSftp channel = (ChannelSftp) sshSession.openChannel("sftp");
+        channel.connect();
+
+        channel.put(IOUtils.toInputStream("example upload"), "thefile.txt");
+
+        final String uploadedContents = new String(Files.readAllBytes(server.getBaseDirectory().resolve("thefile.txt")), StandardCharsets.UTF_8.name());
+        assertEquals("example upload", uploadedContents);
     }
 }
