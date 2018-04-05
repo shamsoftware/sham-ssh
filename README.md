@@ -20,7 +20,7 @@ the API until it reaches 1.0 status. Of course, we'll try to keep breaking chang
 <dependency>
   <groupId>software.sham</groupId>
   <artifactId>sham-ssh</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
