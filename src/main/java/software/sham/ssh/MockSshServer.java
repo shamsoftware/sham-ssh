@@ -1,118 +1,114 @@
 package software.sham.ssh;
 
-import org.apache.sshd.common.Factory;
-import org.apache.sshd.common.keyprovider.AbstractClassLoadableResourceKeyPairProvider;
-import org.apache.sshd.common.util.SecurityUtils;
-import org.apache.sshd.server.Command;
-import org.apache.sshd.server.CommandFactory;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.KeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.sshd.common.util.security.SecurityUtils;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.auth.password.PasswordAuthenticator;
 import org.apache.sshd.server.auth.pubkey.KeySetPublickeyAuthenticator;
+import org.apache.sshd.server.channel.ChannelSession;
+import org.apache.sshd.server.command.Command;
+import org.apache.sshd.server.keyprovider.AbstractGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
+import org.apache.sshd.server.shell.ShellFactory;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+public class MockSshServer implements ShellFactory {
+	public static final String USERNAME = "tester";
+	public static final String PASSWORD = "testing";
+	
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-public class MockSshServer implements Factory<Command>, CommandFactory {
-    public static final String USERNAME = "tester";
-    public static final String PASSWORD = "testing";
-    protected final SshServer sshServer;
-    private Set<PublicKey> keys = new HashSet<PublicKey>();
+	protected final SshServer sshServer;
+	
+	private Set<PublicKey> keys = new HashSet<PublicKey>();
+	private MockSshShell sshShell;
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private MockSshShell sshShell;
+	public MockSshServer(int port) throws IOException {
+		this(port, true);
+	}
 
-    public MockSshServer(int port) throws IOException {
-        this(port, true);
-    }
+	public MockSshServer(int port, boolean shouldStartServices) throws IOException {
+		sshServer = initSshServer(port);
+		if (shouldStartServices) {
+			enableShell();
+			start();
+		}
+	}
 
-    protected MockSshServer(int port, boolean shouldStartServices) throws IOException {
-        sshServer = initSshServer(port);
-        if (shouldStartServices) {
-            enableShell();
-            start();
-        }
-    }
+	/**
+	 * @param key Key in DER format
+	 */
+	public MockSshServer allowPublicKey(byte[] key) throws GeneralSecurityException {
+		final KeySpec spec = new X509EncodedKeySpec(key);
+		keys.add(KeyFactory.getInstance("RSA").generatePublic(spec));
+		sshServer.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this, this.keys));
+		return this;
+	}
 
-    /**
-     * @param key Key in DER format
-     */
-    public MockSshServer allowPublicKey(byte[] key) throws GeneralSecurityException {
-        final KeySpec spec = new X509EncodedKeySpec(key);
-        keys.add(KeyFactory.getInstance("RSA").generatePublic(spec));
-        sshServer.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this.keys));
-        return this;
-    }
+	public MockSshServer enableShell() {
+		log.info("Mock SSH shell is enabled");
+		sshShell = new MockSshShell();
+		setDefaults();
+		sshServer.setShellFactory(this);
+		return this;
+	}
 
-    public SshResponderBuilder respondTo(Matcher matcher) {
-        SshResponderBuilder builder = new SshResponderBuilder();
-        sshShell.getDispatcher().add(matcher, builder.getResponder());
-        return builder;
-    }
+	public void start() throws IOException {
+		Path serverKeyPath = Files.createTempFile("sham-mock-sshd-key", null);
+		AbstractGeneratorHostKeyProvider keyProvider = SecurityUtils
+				.createGeneratorHostKeyProvider(serverKeyPath);
+		sshServer.setKeyPairProvider(keyProvider);
 
-    public SshResponderBuilder respondTo(String input) {
-        return respondTo(Matchers.equalTo(input));
-    }
+		sshServer.start();
+	}
 
-    public MockSshServer enableShell() {
-        logger.info("Mock SSH shell is enabled");
-        sshShell = new MockSshShell();
-        setDefaults();
-        sshServer.setShellFactory(this);
-        return this;
-    }
+	public void stop() throws IOException {
+		sshServer.stop();
+	}
 
-    public void start() throws IOException {
-        AbstractClassLoadableResourceKeyPairProvider keyPairProvider = SecurityUtils.createClassLoadableResourceKeyPairProvider();
-        keyPairProvider.setResources(Arrays.asList("keys/sham-ssh-id-dsa"));
-        sshServer.setKeyPairProvider(keyPairProvider);
+	protected SshServer initSshServer(int port) {
+		final SshServer sshd = SshServer.setUpDefaultServer();
+		sshd.setPort(port);
+		sshd.setPasswordAuthenticator(new PasswordAuthenticator() {
+			@Override
+			public boolean authenticate(String username, String password, ServerSession session) {
+				return USERNAME.equals(username) && PASSWORD.equals(password);
+			}
 
-        sshServer.start();
-    }
+		});
+		sshd.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this, this.keys));
+		return sshd;
+	}
 
-    public void stop() throws IOException {
-        sshServer.stop();
-    }
+	public SshResponderBuilder respondTo(Matcher<String> matcher) {
+		SshResponderBuilder builder = new SshResponderBuilder();
+		sshShell.getDispatcher().add(matcher, builder.getResponder());
+		return builder;
+	}
 
-    protected SshServer initSshServer(int port) {
-        final SshServer sshd = SshServer.setUpDefaultServer();
-        sshd.setPort(port);
-        sshd.setPasswordAuthenticator(new PasswordAuthenticator() {
-            @Override
-            public boolean authenticate(String username, String password, ServerSession session) {
-                return USERNAME.equals(username) && PASSWORD.equals(password);
-            }
+	public SshResponderBuilder respondTo(String input) {
+		return respondTo(Matchers.equalTo(input));
+	}
 
-        });
-        sshd.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this.keys));
-        return sshd;
-    }
+	private void setDefaults() {
+		respondTo("exit").withClose();
+	}
 
-    private void setDefaults() {
-        respondTo("exit").withClose();
-    }
-
-    @Override
-    public Command create() {
-        logger.debug("Creating mock SSH shell");
-        return sshShell;
-    }
-
-    @Override
-    public Command createCommand(String command) {
-        return create();
-    }
+	@Override
+	public Command createShell(ChannelSession channel) throws IOException {
+		return this.sshShell; // mocked singleton
+	}
 }

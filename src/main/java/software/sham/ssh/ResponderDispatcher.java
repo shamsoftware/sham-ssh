@@ -8,9 +8,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+@SuppressWarnings("rawtypes")
 public class ResponderDispatcher {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Map<Matcher, SshResponder> responders = new HashMap<>();
+	private final Map<Matcher, SshResponder> responders = new HashMap<>();
     private final LinkedList<Matcher> matchers = new LinkedList<>();
 
     public void add(Matcher matcher, SshResponder responder) {

@@ -1,15 +1,13 @@
 package software.sham.ssh;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.sham.ssh.actions.Action;
-
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import software.sham.ssh.actions.Action;
 
 public class SshResponder {
     private final Logger logger = LoggerFactory.getLogger(getClass());
