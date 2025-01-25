@@ -2,7 +2,9 @@
 
 # sham.software Mock SSH API
 
-Mock SSH and SFTP testing library for running an SSH server in process. SFTP uses a local temporary directory
+Mock SSH and SFTP testing library for running an SSH server in process. SFTP uses a local temporary directory.
+
+25.01.2025 revamped with latest versions of sshd-core and sshd-sftp.
 
 This library is still under development. Feel free to use, contribute but there could be changes to
 the API until it reaches 1.0 status. Of course, we'll try to keep breaking changes to a minimum.
@@ -20,7 +22,7 @@ the API until it reaches 1.0 status. Of course, we'll try to keep breaking chang
 <dependency>
   <groupId>software.sham</groupId>
   <artifactId>sham-ssh</artifactId>
-  <version>0.1.0</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
