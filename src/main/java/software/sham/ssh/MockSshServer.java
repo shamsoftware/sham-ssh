@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
 import java.security.PublicKey;
-import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,11 +26,11 @@ import org.slf4j.LoggerFactory;
 public class MockSshServer implements ShellFactory {
 	public static final String USERNAME = "tester";
 	public static final String PASSWORD = "testing";
-	
+
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	protected final SshServer sshServer;
-	
+
 	private Set<PublicKey> keys = new HashSet<PublicKey>();
 	private MockSshShell sshShell;
 
@@ -49,13 +47,13 @@ public class MockSshServer implements ShellFactory {
 	}
 
 	/**
-	 * @param key Key in DER format
+	 * @param key with explicit {@link X509EncodedKeySpec#getAlgorithm()} notion
 	 */
-	public MockSshServer allowPublicKey(byte[] key) throws GeneralSecurityException {
-		final KeySpec spec = new X509EncodedKeySpec(key);
-		keys.add(KeyFactory.getInstance("RSA").generatePublic(spec));
+	public MockSshServer allowPublicKey(X509EncodedKeySpec keySpec) throws GeneralSecurityException {
+		this.keys.add(new PublicKeyRetriever(keySpec).getPublicKey());
 		sshServer.setPublickeyAuthenticator(new KeySetPublickeyAuthenticator(this, this.keys));
 		return this;
+
 	}
 
 	public MockSshServer enableShell() {
@@ -68,8 +66,7 @@ public class MockSshServer implements ShellFactory {
 
 	public void start() throws IOException {
 		Path serverKeyPath = Files.createTempFile("sham-mock-sshd-key", null);
-		AbstractGeneratorHostKeyProvider keyProvider = SecurityUtils
-				.createGeneratorHostKeyProvider(serverKeyPath);
+		AbstractGeneratorHostKeyProvider keyProvider = SecurityUtils.createGeneratorHostKeyProvider(serverKeyPath);
 		sshServer.setKeyPairProvider(keyProvider);
 
 		sshServer.start();

@@ -13,6 +13,7 @@ import java.io.PipedOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -109,13 +110,12 @@ public class FunctionalTest {
 		waitForOutput("hodor\n");
 	}
 
-	@Test
-	public void shouldSupportPublicKeyAuth() throws Exception {
+	private void testPublicKeyAuth(Path pubKey, String alg) throws Exception {
 		server.allowPublicKey( //
-				Files.readAllBytes( //
-						Path.of( //
-								Thread.currentThread().getContextClassLoader() //
-										.getResource("keys/id_rsa_tester.der.pub").toURI())));
+				new X509EncodedKeySpec( //
+						Files.readAllBytes(pubKey), //
+						alg) //
+		);
 
 		initSshClientWithKey();
 
@@ -124,8 +124,30 @@ public class FunctionalTest {
 		sendTextToServer("Knock knock\n");
 
 		waitForOutput("hodor\n");
+
 	}
 
+	@Test
+	public void shouldSupportDERPublicKeyAuth() throws Exception {
+		testPublicKeyAuth(Path.of(Thread.currentThread().getContextClassLoader() //
+				.getResource("keys/id_rsa_tester.der.pub").toURI()), //
+				"RSA");
+	}
+
+	@Test
+	public void shouldSupportSSHPublicKeyAuth() throws Exception {
+		testPublicKeyAuth(Path.of(Thread.currentThread().getContextClassLoader() //
+				.getResource("keys/id_rsa_tester.pub").toURI()), //
+				"OPENSSH");
+	}
+
+	@Test
+	public void shouldSupportPKCS8PublicKeyAuth() throws Exception {
+		testPublicKeyAuth(Path.of(Thread.currentThread().getContextClassLoader() //
+				.getResource("keys/id_rsa_tester.pkcs8.pub").toURI()), //
+				"PEM");
+	}
+	
 	@Test
 	public void multipleOutput() throws Exception {
 		server.respondTo(any(String.class)).withOutput("Starting...\n").withOutput("Completed.\n");
