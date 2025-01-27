@@ -1,24 +1,25 @@
 package software.sham.ssh.actions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.sham.ssh.MockSshShell;
+import java.io.IOException;
+import java.io.OutputStream;
 
-public class Output implements Action {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final String output;
-    public Output(String output) {
-        this.output = output;
-    }
+import org.apache.sshd.server.session.ServerSession;
 
-    @Override
-    public void respond(MockSshShell shell) {
-        logger.debug("Sending output: " + output);
-        shell.sendResponse(output);
-    }
+public class Output extends OutputSupport implements Action {
+	
+	private final String[] outputs;
 
-    @Override
-    public String toString() {
-        return "output (" + output + ")";
-    }
+	public Output(String... outputs) {
+		super();
+		
+		this.outputs = outputs;
+	}
+
+	@Override
+	public void respond(ServerSession serverSession, OutputStream outputStream) throws IOException {
+		for (String output: outputs)
+			super.write(output, outputStream);
+	}
+
+
 }
