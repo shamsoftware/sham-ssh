@@ -29,6 +29,8 @@ import com.sshtools.common.ssh.SshException;
 import com.sshtools.common.ssh.components.SshKeyPair;
 import com.sshtools.common.ssh.components.SshPublicKey;
 
+import software.sham.MockSshServerTestSupport;
+
 public class MockSshServerConnectionTest extends MockSshServerTestSupport {
 
 	@Test(expected = IOException.class)

@@ -12,6 +12,8 @@ import org.junit.Test;
 
 import com.sshtools.common.ssh.SshException;
 
+import software.sham.MockSshServerTestSupport;
+
 public class MockSshCommandTest extends MockSshServerTestSupport {
 
 	@Before

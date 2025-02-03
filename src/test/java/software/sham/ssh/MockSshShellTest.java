@@ -19,6 +19,8 @@ import com.sshtools.common.logger.Log.Level;
 import com.sshtools.common.ssh.RequestFuture;
 import com.sshtools.common.ssh.SshException;
 
+import software.sham.MockSshServerTestSupport;
+
 public class MockSshShellTest extends MockSshServerTestSupport {
 
 	private static final long TASK_TIMEOUT = 5000L;

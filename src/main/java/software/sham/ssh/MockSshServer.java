@@ -27,7 +27,7 @@ public class MockSshServer implements ShellFactory, CommandFactory {
 	public static final String USERNAME = "tester";
 	public static final String PASSWORD = "testing";
 
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
+	protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	private final Set<PublicKey> keys = new HashSet<PublicKey>();
 	private final ResponderDispatcher dispatcher = new ResponderDispatcher();
@@ -119,5 +119,9 @@ public class MockSshServer implements ShellFactory, CommandFactory {
 				}
 			}
 		};
+	}
+
+	protected SshServer getSshServer() {
+		return sshServer;
 	}
 }
