@@ -5,6 +5,10 @@
 Mock SSH and SFTP testing library for running an SSH server in process. SFTP uses a local temporary directory.
 
 ## Development Notes
+04.02.2025 1.0.0-RC2 is ready
+* restored sftp
+* introduced git-pack
+
 02.02.2025 1.0.0-RC1 is ready
 * swapping maverick-synergy-client for JSch (for testing)
 * completing the mocking framework to survive basic checks from ssh-client
