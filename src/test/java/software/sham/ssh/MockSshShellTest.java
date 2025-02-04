@@ -69,7 +69,8 @@ public class MockSshShellTest extends MockSshServerTestSupport {
 		server.respondTo("delayedResponder").withOutput("Starting...\n").withDelay(500L).withOutput("Completed.");
 
 		runInShell(shell -> {
-			assertEquals("Starting...\nCompleted.", shell.executeWithOutput("delayedResponder"));
+			assertEquals("Starting..." + System.lineSeparator() + "Completed.",
+					shell.executeWithOutput("delayedResponder"));
 		});
 	}
 

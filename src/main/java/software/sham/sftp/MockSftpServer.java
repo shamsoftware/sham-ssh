@@ -12,6 +12,8 @@ import software.sham.ssh.MockSshServer;
 
 public class MockSftpServer extends MockSshServer {
 
+	private static final String MOCK_SFTP_DIRECTORY = "mock_sftp_root";
+
 	private final Path baseDirectory;
 
 	public MockSftpServer(int port) throws IOException {
@@ -20,7 +22,7 @@ public class MockSftpServer extends MockSshServer {
 		SftpSubsystemFactory sftpSubsystemFactory = new SftpSubsystemFactory.Builder().build();
 		super.getSshServer().setSubsystemFactories(Collections.singletonList(sftpSubsystemFactory));
 
-		this.baseDirectory = Files.createTempDirectory("sftp_root");
+		this.baseDirectory = Files.createTempDirectory(MOCK_SFTP_DIRECTORY);
 		log.info("baseDirectory: " + baseDirectory.toAbsolutePath().toString());
 		super.getSshServer().setFileSystemFactory(new VirtualFileSystemFactory(baseDirectory.toAbsolutePath()));
 	}
