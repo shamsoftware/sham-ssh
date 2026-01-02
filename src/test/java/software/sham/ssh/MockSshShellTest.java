@@ -66,10 +66,11 @@ public class MockSshShellTest extends MockSshServerTestSupport {
 
 	@Test
 	public void delayedOutput() throws IOException {
-		server.respondTo("delayedResponder").withOutput("Starting...\n").withDelay(500L).withOutput("Completed.");
+		server.respondTo("delayedResponder").withOutput("Starting..." + System.lineSeparator()).withDelay(500L)
+				.withOutput("Completed.");
 
 		runInShell(shell -> {
-			assertEquals("Starting..." + System.lineSeparator() + "Completed.",
+			assertEquals("Starting..." + System.lineSeparator() + System.lineSeparator() + "Completed.",
 					shell.executeWithOutput("delayedResponder"));
 		});
 	}
