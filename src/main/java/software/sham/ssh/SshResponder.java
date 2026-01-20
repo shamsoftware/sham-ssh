@@ -1,34 +1,36 @@
 package software.sham.ssh;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.sham.ssh.actions.Action;
-
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
 import java.util.LinkedList;
 import java.util.List;
 
-public class SshResponder {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+import org.apache.sshd.server.session.ServerSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    private final List<Action> actions = new LinkedList<>();
+import software.sham.ssh.actions.Action;
 
-    public void respond(MockSshShell shell) {
-        for (Action action : actions) {
-            try {
-                action.respond(shell);
-            } catch (IOException e) {
-                logger.warn("Mock SSH error during response {}: {}", action.toString(), e.getMessage());
-            }
-        }
-    }
+class SshResponder {
+	public static final SshResponder NULL = new SshResponder();
+	
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public void add(Action action) {
-        actions.add(action);
-    }
+	private final List<Action> actions = new LinkedList<>();
 
-    public static SshResponder NULL = new SshResponder();
+	public void respond(ServerSession serverSession, String input, OutputStream outputStream) {
+		for (Action action : actions) {
+			try {
+				action.respond(serverSession, input, outputStream);
+			} catch (IOException e) {
+				logger.warn("Mock SSH error during response {}: {}", action.toString(), e.getMessage());
+			}
+		}
+	}
+
+	public SshResponder add(Action action) {
+		actions.add(action);
+		return this;
+	}
+
 }

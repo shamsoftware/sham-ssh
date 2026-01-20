@@ -2,10 +2,25 @@
 
 # sham.software Mock SSH API
 
-Mock SSH and SFTP testing library for running an SSH server in process. SFTP uses a local temporary directory
+Mock SSH and SFTP testing library for running an SSH server in process. SFTP uses a local temporary directory.
 
-This library is still under development. Feel free to use, contribute but there could be changes to
-the API until it reaches 1.0 status. Of course, we'll try to keep breaking changes to a minimum.
+## Development Notes
+![Maven Build Status](https://github.com/janesser/sham-ssh/actions/workflows/maven.yml/badge.svg)
+
+04.02.2025 1.0.0-RC2 is ready
+* restored sftp
+* introduced git-pack
+
+02.02.2025 1.0.0-RC1 is ready
+* swapping maverick-synergy-client for JSch (for testing)
+* completing the mocking framework to survive basic checks from ssh-client
+(greeting, prompt and echo-ing)
+* support command or shell mode exclusively
+
+25.01.2025 0.4.0 is ready
+* revamped with latest versions of sshd-core and sshd-sftp.
+
+Hope to have soon artifacts on MC.
 
 **Table of Contents**
 
@@ -16,11 +31,17 @@ the API until it reaches 1.0 status. Of course, we'll try to keep breaking chang
 
 ### Maven
 
+```shell
+git checkout https://github.com/janesser/sham-ssh
+cd sham-ssh
+mvn install
+```
+
 ```xml
 <dependency>
   <groupId>software.sham</groupId>
   <artifactId>sham-ssh</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
